@@ -77,7 +77,7 @@
         if (Math.abs(x) > 0.00001) { return Math.exp(x) - 1; }
         return x * (1 + x * (0.5 + x * (1 / 6 + x * (1 / 24 + x / 120))));
     }
-    function corrected(arrival, service, c, m, cstar, a, fractional, literal) {
+    function corrected(arrival, service, c, m, cstar, a, fractional) {
         arrival = number(arrival); service = number(service); c = number(c); m = number(m);
         cstar = number(cstar); a = number(a);
         validate(arrival, service, c, m, fractional);
@@ -88,8 +88,8 @@
                 k = mi / a + cstar + 1, denominator, numerator, terms = [], i, scale;
             if (!isFinite(k)) { throw new Error('Слишком большой показатель степени модели 2.'); }
             if (Math.abs(logRho) < 1e-14) {
-                denominator = literal ? ci - ci * k : ci * k - ci * (ci - 1) / 2;
-                return denominator ? ci / denominator : NaN;
+                denominator = ci * (ci - 1) / 2 - ci * k;
+                return denominator ? -ci / denominator : NaN;
             }
             if (Math.abs(logRho) * Math.max(k, ci) < 0.5) {
                 for (i = 0; i < ci; i += 1) { terms.push(expm1(i * logRho)); }
@@ -117,11 +117,20 @@
         return n.toFixed(3).replace('.', ',');
     }
     function valid(n) { return isFinite(n) && n >= 0 && n <= 1; }
+    function arrivalFromRho(rho, service, c) {
+        rho = number(rho); service = number(service); c = number(c);
+        if (rho <= 0 || service <= 0 || c <= 0) {
+            throw new Error('ρ, t₀ и C должны быть > 0.');
+        }
+        var arrival = service / c / rho;
+        if (!isFinite(arrival) || arrival <= 0) { throw new Error('Слишком большой диапазон ρ, t₀ и C.'); }
+        return arrival;
+    }
     function relativeError(base, value) {
         return base === 0 || !valid(value) ? '—' : fmt(Math.abs(value - base) / base * 100) + ' %';
     }
     var api = {number: number, calculate: calculate, corrected: corrected,
-        fmt: fmt, valid: valid, relativeError: relativeError, buffers: [1, 3, 5, 10, 20, 25, 50]};
+        fmt: fmt, valid: valid, relativeError: relativeError, arrivalFromRho: arrivalFromRho, buffers: [1, 3, 5, 10, 20, 25, 50]};
     if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
     else { root.SMO = api; }
 }(this));

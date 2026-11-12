@@ -15,6 +15,7 @@ p { margin:8px 0 14px; } .subtle { color:#526477; font-size:18px; }
 label { display:block; font-size:18px; font-weight:bold; margin:0 0 6px; }
 input[type=text] { width:100%; padding:12px; font:22px Arial,sans-serif; color:#17283b; background:#fff; border:1px solid #a7b8c9; border-radius:3px; }
 input[type=checkbox] { width:20px; height:20px; vertical-align:middle; margin:0 8px 0 0; }
+input[disabled] { background:#edf1f5; color:#637486; }
 .check { display:block; font-weight:normal; margin:12px 0; }
 .extra { border-top:1px solid #e0e6ed; margin-top:12px; padding-top:18px; }
 .extra .field { width:32%; }

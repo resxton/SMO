@@ -27,9 +27,16 @@
         target.appendChild(body);
     }
     function input() {
-        return {arrival: el('arrival').value, service: el('service').value, c: el('servers').value,
+        var v = {arrival: el('arrival').value, service: el('service').value, c: el('servers').value,
             m: el('buffer').value, cs: el('cstar').value, a: el('distribution').value,
-            fractional: el('fractional').checked, literal: el('literal').checked};
+            fractional: el('fractional').checked};
+        if (el('rho-mode').checked) {
+            v.arrival = engine.arrivalFromRho(el('rho').value, v.service, v.c);
+            text(el('derived-arrival'), 'Ввод через ρ = ' + el('rho').value + '. Рассчитанный tвх = ' + engine.fmt(v.arrival)
+                + '. В вычислениях используется полная точность.');
+            show('derived-arrival', true);
+        } else { show('derived-arrival', false); }
+        return v;
     }
     function metrics(result) {
         var definitions = [
@@ -53,13 +60,14 @@
         return rows;
     }
     function run(sweep) {
-        var v = input(), buffers, rows = [], graphs = [], i, m, standard, corrected, invalid = false,
+        var v, buffers, rows = [], graphs = [], i, m, standard, corrected, invalid = false,
             base, metricRows, probabilityRows = [], notice;
         try {
+            v = input();
             buffers = sweep ? engine.buffers : [engine.number(v.m)];
             for (i = 0; i < buffers.length; i += 1) {
                 m = buffers[i]; standard = engine.calculate(v.arrival, v.service, v.c, m, v.fractional);
-                corrected = engine.corrected(v.arrival, v.service, v.c, m, v.cs, v.a, v.fractional, v.literal);
+                corrected = engine.corrected(v.arrival, v.service, v.c, m, v.cs, v.a, v.fractional);
                 if (!engine.valid(corrected)) { invalid = true; }
                 rows.push([engine.fmt(m), engine.fmt(standard.loss), engine.fmt(corrected) + (engine.valid(corrected) ? '' : ' (!)'),
                     engine.fmt(corrected - standard.loss), engine.relativeError(standard.loss, corrected)]);
@@ -70,7 +78,7 @@
             table('comparison-table', lastHeaders, rows, 2);
             lastRows = rows; graphRows = graphs; sweeping = sweep;
             text(el('result-title'), sweep ? 'Сравнение по ёмкости буфера' : 'Сравнение моделей');
-            text(el('snapshot'), 'tвх = ' + v.arrival + '; t₀ = ' + v.service + '; C = ' + v.c + '; C* = ' + v.cs + '; a = ' + v.a
+            text(el('snapshot'), 'ρ = ' + engine.fmt(base.rho) + '; tвх = ' + engine.fmt(engine.number(v.arrival)) + '; t₀ = ' + v.service + '; C = ' + v.c + '; C* = ' + v.cs + '; a = ' + v.a
                 + '. Режим: ' + (v.fractional ? 'смесь целых конфигураций' : 'целые C и m') + '.');
             notice = 'Δ — разница вероятностей. Погрешность = |Δ| / Pотк · 100%. База сравнения — M/M/c/m; это расхождение методик, а не ошибка относительно точной G/G-системы.';
             if (invalid) { notice += ' (!) Результат модели 2 вне [0; 1] или не определён. Значение не обрезается. При недопустимом результате или нулевой базе погрешность обозначена «—».'; }
@@ -93,6 +101,7 @@
             text(el('error'), error.message || String(error)); show('error', true);
             show('comparison-card', false); show('metrics-card', false); show('states-card', false);
             show('graph-card', false); show('copy-panel', false); lastRows = [];
+            show('derived-arrival', false);
         }
     }
     function draw() {
@@ -152,7 +161,13 @@
     el('tab-gg').onclick = function () { selectTab('gg'); return false; };
     el('tab-theory').onclick = function () { selectTab('theory'); return false; };
     el('calculator').onsubmit = function () { run(false); return false; };
-    el('sweep').onclick = function () { run(true); };
+    el('rho-mode').onchange = function () {
+        var enabled = el('rho-mode').checked;
+        el('arrival').disabled = enabled;
+        show('rho-input', enabled);
+        run(sweeping);
+    };
+    el('sweep').onclick = function () { sweeping = true; selectTab('gg'); };
     el('compare').onclick = function () { selectTab('gg'); run(false); };
     el('copy').onclick = function () {
         var lines = [lastHeaders.join('\t')], i;
