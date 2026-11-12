@@ -6,10 +6,12 @@
 <title>Анализ СМО — M/M/c/m и G/G/c/m</title>
 <meta name="description" content="Расчёт и сравнение моделей СМО с конечным буфером: вероятности отказа, погрешность, графики и теория.">
 <link rel="stylesheet" type="text/css" href="style.css">
+<script>(function(){var t=null;try{t=window.localStorage.getItem("smo-theme");}catch(e){}if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches){t="dark";}if(t==="dark"){document.documentElement.className+=" dark";}}());</script>
 </head><body>
-<div class="masthead"><div class="wrap"><p class="eyebrow">ТЕОРИЯ МАССОВОГО ОБСЛУЖИВАНИЯ</p><h1>Анализ СМО с конечным буфером</h1><p class="subtle">Расчёт показателей · сравнение методик · влияние ёмкости буфера</p>
+<div class="masthead"><div class="wrap"><div class="font-controls hidden" id="font-controls"><button type="button" id="font-down" title="Уменьшить шрифт" aria-label="Уменьшить шрифт">A−</button><button type="button" id="font-reset" title="Обычный размер шрифта" aria-label="Обычный размер шрифта">A</button><button type="button" id="font-up" title="Увеличить шрифт" aria-label="Увеличить шрифт">A+</button><button type="button" id="theme-toggle" class="theme-toggle" title="Тёмная тема" aria-label="Тёмная тема">☾</button></div><p class="eyebrow">ТЕОРИЯ МАССОВОГО ОБСЛУЖИВАНИЯ</p><h1>Анализ СМО с конечным буфером</h1><p class="subtle">Расчёт показателей · сравнение методик · влияние ёмкости буфера</p>
 <div class="tabs"><a id="tab-mm" href="#analysis">Анализ M/M/c/m</a><a id="tab-gg" href="#analysis">Анализ G/G/c/m</a><a id="tab-theory" href="#theory">Теория и формулы</a></div></div></div>
 <div class="wrap">
+<div class="print-only print-header"><h1>Отчёт: анализ СМО с конечным буфером</h1><p id="print-date" class="subtle"></p></div>
 <noscript><div class="error">Для расчётов включите JavaScript. Используется совместимый синтаксис ES5. Теория с формулами доступна ниже без JavaScript.</div></noscript>
 <div id="analysis">
 <div class="card" id="inputs"><h2 id="analysis-title">Анализ M/M/c/m</h2><p class="subtle" id="analysis-description">Сравнение моделей на общих входных данных.</p>
@@ -35,8 +37,8 @@
 </form></div>
 <div id="error" class="error hidden" role="alert"></div>
 <div id="comparison-card" class="card hidden"><h2 id="result-title">Сравнение моделей</h2><p id="snapshot" class="subtle"></p><div class="table-wrap"><table id="comparison-table"></table></div><p id="comparison-note" class="notice"></p>
-<button type="button" id="copy" class="button secondary">Копировать результаты</button>
-<div id="copy-panel" class="hidden"><p class="subtle">Текст выделен. Если браузер не скопировал автоматически, нажмите Ctrl+C (на Mac — Cmd+C). Можно вставить в Excel.</p><textarea id="copy-text" readonly="readonly" aria-label="Результаты для копирования"></textarea></div></div>
+<div class="export-actions"><button type="button" id="copy" class="button secondary">Копировать результаты</button><button type="button" id="export-csv" class="button secondary">Скачать CSV (Excel)</button><button type="button" id="print-report" class="button secondary">Печать / PDF</button></div>
+<div id="copy-panel" class="hidden"><p class="subtle" id="copy-hint">Текст выделен. Если браузер не скопировал автоматически, нажмите Ctrl+C (на Mac — Cmd+C). Можно вставить в Excel.</p><textarea id="copy-text" readonly="readonly" aria-label="Результаты для копирования"></textarea></div></div>
 <div id="graph-card" class="card hidden"><h2>Вероятность отказа и ёмкость буфера</h2><p class="legend"><span class="blue">● M/M/c/m</span> &nbsp; <span class="red">● G/G/c/m — новая методика</span></p><canvas id="graph" width="1000" height="270">График недоступен в этом браузере. Все значения приведены в таблице сравнения.</canvas><p id="graph-fallback" class="subtle hidden">Браузер не поддерживает Canvas. Значения доступны в таблице сравнения выше.</p></div>
 <div id="metrics-card" class="card hidden"><h2>Показатели M/M/c/m</h2><div class="table-wrap"><table id="metrics-table"></table></div></div>
 <div id="states-card" class="card hidden"><h2>Вероятности состояний</h2><div class="table-wrap" style="max-height:440px"><table id="states-table"></table></div></div>

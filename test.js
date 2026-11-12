@@ -25,12 +25,16 @@ var elements={}, html=fs.readFileSync(__dirname+'/dist/index.html','utf8');
 html.replace(/id="([^"]+)"/g,function (_,id) { elements[id]=new Element(); });
 var defaults={arrival:'20',service:'10',servers:'1',buffer:'2',cstar:'1',distribution:'1'}, key;
 for (key in defaults) { elements[key].value=defaults[key]; }
-var context={window:{SMO:engine},document:{getElementById:function (id) { assert(elements[id],id); return elements[id]; },createElement:function () {return new Element();},execCommand:function(){return false;}},isFinite:isFinite,Math:Math,String:String,Error:Error};
+var root={className:'',style:{}};
+var context={window:{SMO:engine},document:{documentElement:root,getElementById:function (id) { assert(elements[id],id); return elements[id]; },createElement:function () {return new Element();},execCommand:function(){return false;}},isFinite:isFinite,Math:Math,String:String,Error:Error};
 vm.runInNewContext(fs.readFileSync(__dirname+'/dist/app.js','utf8'),context);
 function rowCount(id) { return elements[id].children[1].children.length; }
 assert.strictEqual(elements['comparison-card'].style.display,'block');
 assert.strictEqual(rowCount('comparison-table'),1);
 assert.strictEqual(rowCount('metrics-table'),12);
+elements['export-csv'].onclick();
+assert(elements['copy-text'].value.indexOf('Показатели M/M/c/m')>=0 && elements['copy-text'].value.indexOf('Вероятности состояний')>=0);
+assert(elements['copy-text'].value.indexOf('P3;0,0666666666667')>=0);
 elements['tab-gg'].onclick();
 assert.strictEqual(elements['metrics-card'].style.display,'none');
 assert.strictEqual(rowCount('comparison-table'),1);
@@ -41,6 +45,15 @@ assert.strictEqual(elements['comparison-table'].children[0].children[0].children
 assert.strictEqual(elements['graph-fallback'].style.display,'block');
 elements.copy.onclick();
 assert(elements['copy-text'].value.indexOf('Погрешность')>=0);
+// CSV: без Blob (старый браузер) текст файла показывается для ручного сохранения.
+elements['export-csv'].onclick();
+var csv=elements['copy-text'].value, csvLines=csv.split('\r\n');
+assert(csv.indexOf('Исходные данные')>=0 && csv.indexOf('Прогон по ёмкости буфера')>=0);
+assert(csvLines.indexOf('Буфер m;Pотк — M/M/c/m;Pотк* — G/G/c/m;Δ = Pотк* − Pотк;Погрешность, %')>=0);
+assert(csvLines.some(function (l) { return l.indexOf('1;0,142857142857;0,142857142857;')===0; }), 'строка m=1 в полной точности');
+assert(elements['copy-hint'].textContent.indexOf('.csv')>=0);
+elements.copy.onclick();
+assert(elements['copy-hint'].textContent.indexOf('Текст выделен')===0);
 elements['tab-theory'].onclick();
 assert.strictEqual(elements.analysis.style.display,'none');
 assert.strictEqual(elements.theory.style.display,'block');
@@ -70,4 +83,12 @@ assert.strictEqual(elements.arrival.disabled,false);
 assert.strictEqual(elements.arrival.value,'20');
 assert.strictEqual(elements.error.style.display,'none');
 assert.throws(function () { engine.arrivalFromRho(-1,10,2); });
+// Тема: класс dark на <html>, значок меняется, повторное нажатие возвращает светлую.
+assert.strictEqual(elements['theme-toggle'].textContent,'☾');
+elements['theme-toggle'].onclick();
+assert.strictEqual(root.className,'dark');
+assert.strictEqual(elements['theme-toggle'].textContent,'☀');
+elements['theme-toggle'].onclick();
+assert.strictEqual(root.className,'');
+assert.strictEqual(root.style.fontSize,'20px');
 console.log('OK: расчёты, валидация, вкладки, сравнение, прогон, копирование, теория и fallback графика.');
