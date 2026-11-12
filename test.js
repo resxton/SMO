@@ -31,6 +31,9 @@ function rowCount(id) { return elements[id].children[1].children.length; }
 assert.strictEqual(elements['comparison-card'].style.display,'block');
 assert.strictEqual(rowCount('comparison-table'),1);
 assert.strictEqual(rowCount('metrics-table'),12);
+elements['export-csv'].onclick();
+assert(elements['copy-text'].value.indexOf('Показатели M/M/c/m')>=0 && elements['copy-text'].value.indexOf('Вероятности состояний')>=0);
+assert(elements['copy-text'].value.indexOf('P3;0,0666666666667')>=0);
 elements['tab-gg'].onclick();
 assert.strictEqual(elements['metrics-card'].style.display,'none');
 assert.strictEqual(rowCount('comparison-table'),1);
@@ -41,6 +44,15 @@ assert.strictEqual(elements['comparison-table'].children[0].children[0].children
 assert.strictEqual(elements['graph-fallback'].style.display,'block');
 elements.copy.onclick();
 assert(elements['copy-text'].value.indexOf('Погрешность')>=0);
+// CSV: без Blob (старый браузер) текст файла показывается для ручного сохранения.
+elements['export-csv'].onclick();
+var csv=elements['copy-text'].value, csvLines=csv.split('\r\n');
+assert(csv.indexOf('Исходные данные')>=0 && csv.indexOf('Прогон по ёмкости буфера')>=0);
+assert(csvLines.indexOf('Буфер m;Pотк — M/M/c/m;Pотк* — G/G/c/m;Δ = Pотк* − Pотк;Погрешность, %')>=0);
+assert(csvLines.some(function (l) { return l.indexOf('1;0,142857142857;0,142857142857;')===0; }), 'строка m=1 в полной точности');
+assert(elements['copy-hint'].textContent.indexOf('.csv')>=0);
+elements.copy.onclick();
+assert(elements['copy-hint'].textContent.indexOf('Текст выделен')===0);
 elements['tab-theory'].onclick();
 assert.strictEqual(elements.analysis.style.display,'none');
 assert.strictEqual(elements.theory.style.display,'block');

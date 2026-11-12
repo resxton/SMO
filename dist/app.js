@@ -1,7 +1,8 @@
 (function () {
     'use strict';
-    var engine = window.SMO, fontSize = 20, tab = 'mm', sweeping = false, lastRows = [], lastHeaders = [], graphRows = [];
+    var engine = window.SMO, fontSize = 20, tab = 'mm', sweeping = false, lastRows = [], lastHeaders = [], graphRows = [], report = null;
     function el(id) { return document.getElementById(id); }
+    var copyHint = 'Текст выделен. Если браузер не скопировал автоматически, нажмите Ctrl+C (на Mac — Cmd+C). Можно вставить в Excel.';
     function show(id, visible) { el(id).style.display = visible ? 'block' : 'none'; }
     function text(node, value) {
         if ('textContent' in node) { node.textContent = value; } else { node.innerText = value; }
@@ -38,8 +39,8 @@
         } else { show('derived-arrival', false); }
         return v;
     }
-    function metrics(result) {
-        var definitions = [
+    function metricDefinitions() {
+        return [
             ['φ', 'Предложенная нагрузка СМО', 'λ / μ', 'phi'],
             ['ρ', 'Предложенная нагрузка на аппарат', 'φ / C', 'rho'],
             ['P₀', 'Вероятность простоя всей системы', 'P(N = 0)', 'p0'],
@@ -52,7 +53,22 @@
             ['T', 'Среднее время пребывания', 'L / λc', 'T'],
             ['q', 'Относительная пропускная способность', '1 − Pотк', 'q'],
             ['A', 'Абсолютная пропускная способность', 'q · λ', 'A']
-        ], rows = [], i, d;
+        ];
+    }
+    function rawMetrics(result) {
+        var definitions = metricDefinitions(), rows = [], i, d;
+        for (i = 0; i < definitions.length; i += 1) {
+            d = definitions[i]; rows.push([d[0], d[1], d[2], result[d[3]]]);
+        }
+        return rows;
+    }
+    function rawStates(result) {
+        var rows = [], i;
+        for (i = 0; i < result.probabilities.length; i += 1) { rows.push(['P' + i, result.probabilities[i]]); }
+        return rows;
+    }
+    function metrics(result) {
+        var definitions = metricDefinitions(), rows = [], i, d;
         for (i = 0; i < definitions.length; i += 1) {
             d = definitions[i]; rows.push([d[0], d[1], d[2], engine.fmt(result[d[3]])]);
         }
@@ -60,7 +76,7 @@
         return rows;
     }
     function run(sweep) {
-        var v, buffers, rows = [], graphs = [], i, m, standard, corrected, invalid = false,
+        var v, buffers, rows = [], graphs = [], rawRows = [], i, m, standard, corrected, invalid = false,
             base, metricRows, probabilityRows = [], notice;
         try {
             v = input();
@@ -72,11 +88,26 @@
                 rows.push([engine.fmt(m), engine.fmt(standard.loss), engine.fmt(corrected) + (engine.valid(corrected) ? '' : ' (!)'),
                     engine.fmt(corrected - standard.loss), engine.relativeError(standard.loss, corrected)]);
                 graphs.push([m, standard.loss, corrected]); base = standard;
+                rawRows.push([m, standard.loss, corrected, corrected - standard.loss,
+                    standard.loss !== 0 && engine.valid(corrected) ? Math.abs(corrected - standard.loss) / standard.loss * 100 : NaN]);
             }
             show('error', false); show('comparison-card', true);
             lastHeaders = ['Буфер m', 'Pотк — M/M/c/m', 'Pотк* — G/G/c/m', 'Δ = Pотк* − Pотк', 'Погрешность, %'];
             table('comparison-table', lastHeaders, rows, 2);
             lastRows = rows; graphRows = graphs; sweeping = sweep;
+            report = {params: [
+                ['Модель (вкладка)', tab === 'mm' ? 'M/M/c/m' : 'G/G/c/m'],
+                ['Расчёт', sweep ? 'Прогон по ёмкости буфера' : 'Одна конфигурация'],
+                ['Ввод через ρ', el('rho-mode').checked ? 'да, ρ = ' + el('rho').value : 'нет'],
+                ['Интервал поступления tвх', engine.number(v.arrival)],
+                ['Время обслуживания t₀', engine.number(v.service)],
+                ['Число аппаратов C', engine.number(v.c)],
+                ['Ёмкость буфера m', sweep ? engine.buffers.join(', ') : engine.number(v.m)],
+                ['C* — коррекция каналов', engine.number(v.cs)],
+                ['a — учёт распределений', engine.number(v.a)],
+                ['Дробный ввод C и m', v.fractional ? 'да' : 'нет'],
+                ['ρ — предложенная нагрузка на аппарат', base.rho]
+            ], sections: [{title: 'Сравнение моделей', headers: ['Буфер m', 'Pотк — M/M/c/m', 'Pотк* — G/G/c/m', 'Δ = Pотк* − Pотк', 'Погрешность, %'], rows: rawRows}]};
             text(el('result-title'), sweep ? 'Сравнение по ёмкости буфера' : 'Сравнение моделей');
             text(el('snapshot'), 'ρ = ' + engine.fmt(base.rho) + '; tвх = ' + engine.fmt(engine.number(v.arrival)) + '; t₀ = ' + v.service + '; C = ' + v.c + '; C* = ' + v.cs + '; a = ' + v.a
                 + '. Режим: ' + (v.fractional ? 'смесь целых конфигураций' : 'целые C и m') + '.');
@@ -90,6 +121,9 @@
                     probabilityRows.push(['P' + i, engine.fmt(base.probabilities[i])]);
                 }
                 table('states-table', ['Состояние N', 'Вероятность P(N)'], probabilityRows);
+                report.sections.push({title: 'Показатели M/M/c/m', headers: ['Показатель', 'Описание', 'Формула', 'Значение'],
+                    rows: rawMetrics(base)});
+                report.sections.push({title: 'Вероятности состояний', headers: ['Состояние N', 'Вероятность P(N)'], rows: rawStates(base)});
                 lastHeaders = ['Показатель', 'Описание', 'Формула', 'Значение'];
                 lastRows = metricRows.concat([['', '', '', ''], ['Сравнение', '', '', '']],
                     [['Буфер m', 'Pотк — M/M/c/m', 'Pотк* — G/G/c/m', 'Δ', 'Погрешность, %']], rows,
@@ -100,7 +134,7 @@
         } catch (error) {
             text(el('error'), error.message || String(error)); show('error', true);
             show('comparison-card', false); show('metrics-card', false); show('states-card', false);
-            show('graph-card', false); show('copy-panel', false); lastRows = [];
+            show('graph-card', false); show('copy-panel', false); lastRows = []; report = null;
             show('derived-arrival', false);
         }
     }
@@ -173,9 +207,70 @@
         var lines = [lastHeaders.join('\t')], i;
         if (!lastRows.length) { return; }
         for (i = 0; i < lastRows.length; i += 1) { lines.push(lastRows[i].join('\t')); }
+        text(el('copy-hint'), copyHint);
         el('copy-text').value = lines.join('\r\n'); show('copy-panel', true);
         el('copy-text').focus(); el('copy-text').select();
         try { document.execCommand('copy'); } catch (ignore) { /* Ручное копирование доступно всегда. */ }
+    };
+    function pad(n) { return (n < 10 ? '0' : '') + n; }
+    function csvValue(value) {
+        var s;
+        if (typeof value === 'number') {
+            if (isNaN(value)) { return ''; }
+            if (!isFinite(value)) { return value < 0 ? '-∞' : '∞'; }
+            s = String(Number(value.toPrecision(12))).replace('.', ',');
+        } else { s = String(value); }
+        return /[";\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }
+    function csvLine(cells) {
+        var out = [], i;
+        for (i = 0; i < cells.length; i += 1) { out.push(csvValue(cells[i])); }
+        return out.join(';');
+    }
+    function buildCsv(now) {
+        var lines = [], i, j, s;
+        lines.push(csvLine(['Отчёт: анализ СМО с конечным буфером']));
+        lines.push(csvLine(['Дата', now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes())]));
+        lines.push(''); lines.push(csvLine(['Исходные данные']));
+        for (i = 0; i < report.params.length; i += 1) { lines.push(csvLine(report.params[i])); }
+        for (i = 0; i < report.sections.length; i += 1) {
+            s = report.sections[i];
+            lines.push(''); lines.push(csvLine([s.title])); lines.push(csvLine(s.headers));
+            for (j = 0; j < s.rows.length; j += 1) { lines.push(csvLine(s.rows[j])); }
+        }
+        lines.push('');
+        lines.push(csvLine(['Погрешность = |Δ| / Pотк · 100% (расхождение методик); база — M/M/c/m. Пустая ячейка — значение не определено или вне [0; 1].']));
+        return lines.join('\r\n');
+    }
+    function download(name, content) {
+        var blob, url, link;
+        if (!window.Blob) { return false; }
+        try { blob = new window.Blob(['\ufeff' + content], {type: 'text/csv;charset=utf-8'}); } catch (ignore) { return false; }
+        if (window.navigator && window.navigator.msSaveOrOpenBlob) { window.navigator.msSaveOrOpenBlob(blob, name); return true; }
+        if (!window.URL || !window.URL.createObjectURL) { return false; }
+        link = document.createElement('a');
+        if (!('download' in link)) { return false; }
+        url = window.URL.createObjectURL(blob);
+        link.href = url; link.download = name; link.style.display = 'none';
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        window.setTimeout(function () { window.URL.revokeObjectURL(url); }, 1000);
+        return true;
+    }
+    el('export-csv').onclick = function () {
+        var now = new Date(), content, name;
+        if (!report) { return; }
+        content = buildCsv(now);
+        name = 'smo_' + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + '_' + pad(now.getHours()) + pad(now.getMinutes()) + '.csv';
+        if (!download(name, content)) {
+            text(el('copy-hint'), 'Браузер не поддерживает скачивание файлов. Сохраните выделенный текст в файл ' + name + ' (Ctrl+C / Cmd+C) или вставьте в Excel.');
+            el('copy-text').value = content; show('copy-panel', true); el('copy-text').focus(); el('copy-text').select();
+        }
+    };
+    el('print-report').onclick = function () {
+        var now = new Date();
+        if (!report) { return; }
+        text(el('print-date'), 'Сформировано: ' + pad(now.getDate()) + '.' + pad(now.getMonth() + 1) + '.' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()));
+        if (window.print) { window.print(); }
     };
     window.onresize = function () { if (sweeping && tab !== 'theory') { draw(); } };
     function setFont(size) {
