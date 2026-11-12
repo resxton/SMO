@@ -141,7 +141,7 @@
     function draw() {
         var canvas = el('graph'), ctx, width = Math.max(el('graph-card').clientWidth - 48, 300),
             left = 85, right = width - 28, top = 20, bottom = 215 + Math.round(17 * fontSize / 20) - 17, low = 0, high = 0,
-            i, j, p, x, y, colors = ['#2467a6', '#bd493a'], started;
+            i, j, p, x, y, dark = isDark(), colors = dark ? ['#6fb0ee', '#f08a7a'] : ['#2467a6', '#bd493a'], started;
         if (!canvas.getContext) { show('graph-fallback', true); return; }
         ctx = canvas.getContext('2d'); if (!ctx) { show('graph-fallback', true); return; }
         canvas.width = width; canvas.height = bottom + 55; canvas.style.height = (bottom + 55) + 'px';
@@ -154,13 +154,13 @@
         ctx.font = Math.round(17 * fontSize / 20) + 'px Arial'; ctx.lineWidth = 1;
         for (i = 0; i <= 4; i += 1) {
             y = bottom - (bottom - top) * i / 4;
-            ctx.strokeStyle = '#e1e7ee'; ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(right, y); ctx.stroke();
-            ctx.fillStyle = '#526477'; ctx.textAlign = 'right'; ctx.fillText(engine.fmt(low + (high - low) * i / 4), left - 10, y + 6);
+            ctx.strokeStyle = dark ? '#2b3846' : '#e1e7ee'; ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(right, y); ctx.stroke();
+            ctx.fillStyle = dark ? '#9aabbd' : '#526477'; ctx.textAlign = 'right'; ctx.fillText(engine.fmt(low + (high - low) * i / 4), left - 10, y + 6);
         }
-        ctx.strokeStyle = '#8295a7'; ctx.beginPath(); ctx.moveTo(left, top); ctx.lineTo(left, bottom); ctx.lineTo(right, bottom); ctx.stroke();
+        ctx.strokeStyle = dark ? '#5d7186' : '#8295a7'; ctx.beginPath(); ctx.moveTo(left, top); ctx.lineTo(left, bottom); ctx.lineTo(right, bottom); ctx.stroke();
         for (i = 0; i < graphRows.length; i += 1) {
             x = left + (right - left) * (graphRows[i][0] - 1) / 49;
-            ctx.fillStyle = '#526477'; ctx.textAlign = 'center'; ctx.fillText(String(graphRows[i][0]), x, bottom + 26);
+            ctx.fillStyle = dark ? '#9aabbd' : '#526477'; ctx.textAlign = 'center'; ctx.fillText(String(graphRows[i][0]), x, bottom + 26);
         }
         ctx.textAlign = 'right'; ctx.fillText('Ёмкость буфера m', right, bottom + 48);
         for (j = 1; j < 3; j += 1) {
@@ -273,6 +273,21 @@
         if (window.print) { window.print(); }
     };
     window.onresize = function () { if (sweeping && tab !== 'theory') { draw(); } };
+    function isDark() {
+        return document.documentElement ? /(^|\s)dark(\s|$)/.test(document.documentElement.className) : false;
+    }
+    function setTheme(dark, save) {
+        var root = document.documentElement;
+        if (root) {
+            root.className = (root.className.replace(/(^|\s)dark(\s|$)/g, ' ') + (dark ? ' dark' : '')).replace(/^\s+|\s+$/g, '');
+        }
+        text(el('theme-toggle'), dark ? '☀' : '☾');
+        el('theme-toggle').title = dark ? 'Светлая тема' : 'Тёмная тема';
+        if (el('theme-toggle').setAttribute) { el('theme-toggle').setAttribute('aria-label', el('theme-toggle').title); }
+        if (save) { try { window.localStorage.setItem('smo-theme', dark ? 'dark' : 'light'); } catch (ignore) { /* Хранилище недоступно. */ } }
+        if (sweeping && tab !== 'theory') { draw(); }
+    }
+    el('theme-toggle').onclick = function () { setTheme(!isDark(), true); };
     function setFont(size) {
         fontSize = Math.max(14, Math.min(32, size));
         if (document.documentElement) { document.documentElement.style.fontSize = fontSize + 'px'; }
@@ -286,5 +301,6 @@
     show('font-controls', true);
     try { fontSize = Number(window.localStorage.getItem('smo-font-size')) || 20; } catch (ignore) { fontSize = 20; }
     setFont(fontSize);
+    setTheme(isDark(), false);
     selectTab('mm');
 }());

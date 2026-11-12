@@ -25,7 +25,8 @@ var elements={}, html=fs.readFileSync(__dirname+'/dist/index.html','utf8');
 html.replace(/id="([^"]+)"/g,function (_,id) { elements[id]=new Element(); });
 var defaults={arrival:'20',service:'10',servers:'1',buffer:'2',cstar:'1',distribution:'1'}, key;
 for (key in defaults) { elements[key].value=defaults[key]; }
-var context={window:{SMO:engine},document:{getElementById:function (id) { assert(elements[id],id); return elements[id]; },createElement:function () {return new Element();},execCommand:function(){return false;}},isFinite:isFinite,Math:Math,String:String,Error:Error};
+var root={className:'',style:{}};
+var context={window:{SMO:engine},document:{documentElement:root,getElementById:function (id) { assert(elements[id],id); return elements[id]; },createElement:function () {return new Element();},execCommand:function(){return false;}},isFinite:isFinite,Math:Math,String:String,Error:Error};
 vm.runInNewContext(fs.readFileSync(__dirname+'/dist/app.js','utf8'),context);
 function rowCount(id) { return elements[id].children[1].children.length; }
 assert.strictEqual(elements['comparison-card'].style.display,'block');
@@ -82,4 +83,12 @@ assert.strictEqual(elements.arrival.disabled,false);
 assert.strictEqual(elements.arrival.value,'20');
 assert.strictEqual(elements.error.style.display,'none');
 assert.throws(function () { engine.arrivalFromRho(-1,10,2); });
+// Тема: класс dark на <html>, значок меняется, повторное нажатие возвращает светлую.
+assert.strictEqual(elements['theme-toggle'].textContent,'☾');
+elements['theme-toggle'].onclick();
+assert.strictEqual(root.className,'dark');
+assert.strictEqual(elements['theme-toggle'].textContent,'☀');
+elements['theme-toggle'].onclick();
+assert.strictEqual(root.className,'');
+assert.strictEqual(root.style.fontSize,'20px');
 console.log('OK: расчёты, валидация, вкладки, сравнение, прогон, копирование, теория и fallback графика.');

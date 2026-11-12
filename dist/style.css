@@ -49,6 +49,35 @@ textarea { width:100%; height:200px; padding:12px; font:0.8rem/1.5 monospace; }
  .tabs a { padding:12px; font-size:0.85rem; } h1 { font-size:1.4rem; } td,th { padding:10px; }
 }
 @media screen and (max-width:480px) { .field,.extra .field { width:100%; } }
+.font-controls .theme-toggle { margin-left:14px; min-width:52px; }
+@media screen {
+ html.dark body { background:#11161d; color:#dbe4ee; }
+ html.dark .masthead { background:#18202a; border-bottom-color:#2b3846; border-top-color:#4d94d6; }
+ html.dark .eyebrow { color:#6fb0ee; }
+ html.dark .subtle, html.dark .legend, html.dark .footer { color:#9aabbd; }
+ html.dark .tabs { border-bottom-color:#33424f; }
+ html.dark .tabs a { background:#1f2934; color:#b6c5d4; border-color:#33424f; }
+ html.dark .tabs a.active { background:#18202a; color:#8cc2f5; border-top-color:#4d94d6; border-bottom-color:#18202a; }
+ html.dark .card { background:#18202a; border-color:#2b3846; }
+ html.dark .extra { border-top-color:#2b3846; }
+ html.dark input[type=text], html.dark textarea { background:#0f141a; color:#e6edf4; border-color:#41536a; }
+ html.dark input[disabled] { background:#1c242e; color:#7d8ea0; }
+ html.dark .button { background:#2f78bd; border-color:#2f78bd; color:#fff; }
+ html.dark .secondary, html.dark .font-controls button { background:#18202a; color:#9cc8f2; border-color:#41536a; }
+ html.dark .font-controls button:hover, html.dark .secondary:hover { background:#222d39; }
+ html.dark .font-controls button[disabled] { color:#4b5b6b; background:#18202a; }
+ html.dark .error { background:#3a1d1a; border-color:#a5483c; color:#f2b8ae; }
+ html.dark .notice { background:#1d2732; border-left-color:#5b7a95; }
+ html.dark th { background:#1f2a36; color:#c4d3e2; }
+ html.dark td, html.dark th { border-bottom-color:#2b3846; }
+ html.dark .invalid { color:#ff9c8f; background:#3a1d1a; }
+ html.dark .blue { color:#6fb0ee; } html.dark .red { color:#f08a7a; }
+ html.dark canvas { background:#18202a; }
+ html.dark .latex { background:#0f141a; color:#cfd9e3; }
+ html.dark .theory-section { border-bottom-color:#2b3846; }
+ html.dark .formula { filter:invert(0.88) hue-rotate(180deg); }
+ html.dark a { color:#8cc2f5; }
+}
 @media print {
  .font-controls,.masthead,.tabs,#inputs,.actions,.export-actions,#copy-panel,.footer { display:none !important; }
  .print-only { display:block; } .print-header h1 { font-size:22px; margin:0 0 4px; }

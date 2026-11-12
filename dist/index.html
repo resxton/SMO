@@ -6,8 +6,9 @@
 <title>Анализ СМО — M/M/c/m и G/G/c/m</title>
 <meta name="description" content="Расчёт и сравнение моделей СМО с конечным буфером: вероятности отказа, погрешность, графики и теория.">
 <link rel="stylesheet" type="text/css" href="style.css">
+<script>(function(){var t=null;try{t=window.localStorage.getItem("smo-theme");}catch(e){}if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches){t="dark";}if(t==="dark"){document.documentElement.className+=" dark";}}());</script>
 </head><body>
-<div class="masthead"><div class="wrap"><div class="font-controls hidden" id="font-controls"><button type="button" id="font-down" title="Уменьшить шрифт" aria-label="Уменьшить шрифт">A−</button><button type="button" id="font-reset" title="Обычный размер шрифта" aria-label="Обычный размер шрифта">A</button><button type="button" id="font-up" title="Увеличить шрифт" aria-label="Увеличить шрифт">A+</button></div><p class="eyebrow">ТЕОРИЯ МАССОВОГО ОБСЛУЖИВАНИЯ</p><h1>Анализ СМО с конечным буфером</h1><p class="subtle">Расчёт показателей · сравнение методик · влияние ёмкости буфера</p>
+<div class="masthead"><div class="wrap"><div class="font-controls hidden" id="font-controls"><button type="button" id="font-down" title="Уменьшить шрифт" aria-label="Уменьшить шрифт">A−</button><button type="button" id="font-reset" title="Обычный размер шрифта" aria-label="Обычный размер шрифта">A</button><button type="button" id="font-up" title="Увеличить шрифт" aria-label="Увеличить шрифт">A+</button><button type="button" id="theme-toggle" class="theme-toggle" title="Тёмная тема" aria-label="Тёмная тема">☾</button></div><p class="eyebrow">ТЕОРИЯ МАССОВОГО ОБСЛУЖИВАНИЯ</p><h1>Анализ СМО с конечным буфером</h1><p class="subtle">Расчёт показателей · сравнение методик · влияние ёмкости буфера</p>
 <div class="tabs"><a id="tab-mm" href="#analysis">Анализ M/M/c/m</a><a id="tab-gg" href="#analysis">Анализ G/G/c/m</a><a id="tab-theory" href="#theory">Теория и формулы</a></div></div></div>
 <div class="wrap">
 <div class="print-only print-header"><h1>Отчёт: анализ СМО с конечным буфером</h1><p id="print-date" class="subtle"></p></div>
