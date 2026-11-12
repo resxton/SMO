@@ -1,6 +1,6 @@
 (function () {
     'use strict';
-    var engine = window.SMO, tab = 'mm', sweeping = false, lastRows = [], lastHeaders = [], graphRows = [];
+    var engine = window.SMO, fontSize = 20, tab = 'mm', sweeping = false, lastRows = [], lastHeaders = [], graphRows = [];
     function el(id) { return document.getElementById(id); }
     function show(id, visible) { el(id).style.display = visible ? 'block' : 'none'; }
     function text(node, value) {
@@ -106,18 +106,18 @@
     }
     function draw() {
         var canvas = el('graph'), ctx, width = Math.max(el('graph-card').clientWidth - 48, 300),
-            left = 85, right = width - 28, top = 20, bottom = 215, low = 0, high = 0,
+            left = 85, right = width - 28, top = 20, bottom = 215 + Math.round(17 * fontSize / 20) - 17, low = 0, high = 0,
             i, j, p, x, y, colors = ['#2467a6', '#bd493a'], started;
         if (!canvas.getContext) { show('graph-fallback', true); return; }
         ctx = canvas.getContext('2d'); if (!ctx) { show('graph-fallback', true); return; }
-        canvas.width = width; canvas.height = 270;
+        canvas.width = width; canvas.height = bottom + 55; canvas.style.height = (bottom + 55) + 'px';
         for (i = 0; i < graphRows.length; i += 1) {
             for (j = 1; j < 3; j += 1) {
                 p = graphRows[i][j]; if (isFinite(p)) { low = Math.min(low, p); high = Math.max(high, p); }
             }
         }
         if (high === low) { high = low + 1; }
-        ctx.font = '17px Arial'; ctx.lineWidth = 1;
+        ctx.font = Math.round(17 * fontSize / 20) + 'px Arial'; ctx.lineWidth = 1;
         for (i = 0; i <= 4; i += 1) {
             y = bottom - (bottom - top) * i / 4;
             ctx.strokeStyle = '#e1e7ee'; ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(right, y); ctx.stroke();
@@ -128,7 +128,7 @@
             x = left + (right - left) * (graphRows[i][0] - 1) / 49;
             ctx.fillStyle = '#526477'; ctx.textAlign = 'center'; ctx.fillText(String(graphRows[i][0]), x, bottom + 26);
         }
-        ctx.textAlign = 'right'; ctx.fillText('Ёмкость буфера m', right, 263);
+        ctx.textAlign = 'right'; ctx.fillText('Ёмкость буфера m', right, bottom + 48);
         for (j = 1; j < 3; j += 1) {
             ctx.strokeStyle = colors[j - 1]; ctx.fillStyle = colors[j - 1]; ctx.lineWidth = 2.5; ctx.beginPath(); started = false;
             for (i = 0; i < graphRows.length; i += 1) {
@@ -178,5 +178,18 @@
         try { document.execCommand('copy'); } catch (ignore) { /* Ручное копирование доступно всегда. */ }
     };
     window.onresize = function () { if (sweeping && tab !== 'theory') { draw(); } };
+    function setFont(size) {
+        fontSize = Math.max(14, Math.min(32, size));
+        if (document.documentElement) { document.documentElement.style.fontSize = fontSize + 'px'; }
+        el('font-down').disabled = fontSize <= 14; el('font-up').disabled = fontSize >= 32;
+        try { window.localStorage.setItem('smo-font-size', String(fontSize)); } catch (ignore) { /* Хранилище недоступно. */ }
+        if (sweeping && tab !== 'theory') { draw(); }
+    }
+    el('font-down').onclick = function () { setFont(fontSize - 2); };
+    el('font-up').onclick = function () { setFont(fontSize + 2); };
+    el('font-reset').onclick = function () { setFont(20); };
+    show('font-controls', true);
+    try { fontSize = Number(window.localStorage.getItem('smo-font-size')) || 20; } catch (ignore) { fontSize = 20; }
+    setFont(fontSize);
     selectTab('mm');
 }());
